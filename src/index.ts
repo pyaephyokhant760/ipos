@@ -1,19 +1,19 @@
-import express from "express"; 
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import UserRouter from "./router/customer";
 
- import { getCustomers } from "../src/controller/customers";
-require("dotenv").config();
-const cors = require("cors");
-const app = express(); 
- 
-app.use(cors()); 
- 
-const PORT = process.env.PORT || 8000; 
- 
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
 app.use(express.json());
- 
-app.listen(PORT, () => {
-  // Start the server and listen on the specified port
-  console.log(`Server is running on http://localhost:${PORT}`); // Log a message indicating the server is running
-});
 
-app.get('/api/customers', getCustomers);
+app.use("/api", UserRouter);
+
+const PORT = process.env.PORT || 8000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
