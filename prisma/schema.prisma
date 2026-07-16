@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,11 +7,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User { 
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
-  email String  @unique
-  name  String?
-  phone String
+model customer {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  phone     String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-} 
+  updatedAt DateTime @updatedAt // (now()) ကို ဖျက်ပေးပါ
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  username  String    @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String    @unique
+  dob       DateTime?
+  gender    Gender
+  image     String?
+  role      Role      @default(ATTENDANT)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // အုပ်ချုပ်သောဆိုင်များ (Shop model ရှိ admin field နှင့် ချိတ်ဆက်ရန်)
+  shops          Shop[]
+  
+  // Attendant assignments (explicit many-to-many)
+  shopAssignments ShopAttendant[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Role {
+  ADMIN
+  ATTENDANT
+}
+
+model Shop {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  location   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relation ပြင်ဆင်ချက်များ
+  adminId    String   @db.ObjectId
+  admin      User     @relation(fields: [adminId], references: [id]) // references ဟု ပြင်ပါ
+  
+  // Attendants (explicit many-to-many for MongoDB)
+  attendants ShopAttendant[]
+}
+
+// Explicit junction model for many-to-many relation (required by MongoDB)
+model ShopAttendant {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  shopId  String @db.ObjectId
+  userId  String @db.ObjectId
+  shop    Shop   @relation(fields: [shopId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
+  
+  @@unique([shopId, userId])
+}
