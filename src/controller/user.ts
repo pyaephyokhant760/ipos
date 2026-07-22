@@ -66,6 +66,120 @@ export async function getUsers(req: Request, res: Response) {
             error:null
         })
     } catch (error) {
-         return res.status(400).json({ error: "Sometime went wrong",data: null });
+         return res.status(400).json({ error: "Something went wrong",data: null });
+    }
+}
+
+
+export async function getUserId(req : Request , res: Response) {
+    const id = req.params.id;
+    try{
+        const user = await db.user.findUnique({
+            where : {
+                id
+            }
+        })
+
+        if(!user) {
+            return res.status(400).json({data: null,error: "No User Found"})
+        }
+
+        const { password , ...result } = user;
+        res.status(200).json({
+            data : result,
+            error : null
+        })
+    }catch(error) {
+        return res.status(400).json({data:null,error: "Something went wrong"})
+    }
+}
+
+
+export async function updatePassword(req: Request, res: Response) {
+    if (!req.body || !req.body.email || !req.body.oldPassword || !req.body.newPassword) {
+        return res.status(400).json({ error: "Missing required fields: email, oldPassword, newPassword" });
+    }
+    const { email, oldPassword, newPassword } = req.body;
+    try{
+        const user = await db.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+        if(!user) {
+            return res.status(400).json({ error: "User not found" });
+        }
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ error: "Invalid old password" });
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        await db.user.update({
+            where: {
+                email: email
+            },
+            data: {
+                password: hashedNewPassword
+            }
+        });
+        return res.status(200).json({ message: "Password updated successfully" });
+    }catch(error) {
+        return res.status(400).json({ error: "Something went wrong" });
+    }
+}
+
+export async function updateUser(req: Request, res: Response) {
+    const id = req.params.id;
+    const { email, username, firstName, lastName, phone, dob, gender, image, role } = req.body;
+    try {
+        const user = await db.user.findUnique({
+            where: {
+                id: id
+            }
+        });
+        if(!user) {
+            return res.status(400).json({ error: "User not found" });
+        }
+        await db.user.update({
+            where: {
+                id: id
+            },
+            data: {
+                email: email,
+                username: username,
+                firstName: firstName,
+                lastName: lastName,
+                phone: phone,
+                dob: dob,
+                gender: gender,
+                image: image,
+                role: role
+            }
+        });
+        return res.status(200).json({ message: "User updated successfully" });
+    } catch (error) {
+        return res.status(400).json({ error: "Something went wrong" });
+    }
+}
+
+export async function deleteUser(req: Request, res: Response) {
+    const id = req.params.id;
+    try {
+        const user = await db.user.findUnique({
+            where: {
+                id: id
+            }
+        });
+        if(!user) {
+            return res.status(400).json({ error: "User not found" });
+        }
+        await db.user.delete({
+            where: {
+                id: id
+            }
+        });
+        return res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        return res.status(400).json({ error: "Something went wrong" });
     }
 }
