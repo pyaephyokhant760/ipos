@@ -49,6 +49,7 @@ enum Role {
 
 model Shop {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug       String @unique
   name       String
   location   String
   createdAt  DateTime @default(now())
@@ -59,7 +60,7 @@ model Shop {
   admin      User     @relation(fields: [adminId], references: [id]) // references ဟု ပြင်ပါ
   
   // Attendants (explicit many-to-many for MongoDB)
-  attendants ShopAttendant[]
+  attendantIds ShopAttendant[]
 }
 
 // Explicit junction model for many-to-many relation (required by MongoDB)
